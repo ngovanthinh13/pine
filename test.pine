@@ -1,0 +1,41 @@
+//@version=5
+indicator("Percent Change of Multiple Pairs (Daily and Weekly)", overlay=true)
+
+// Function to calculate percent change
+percentChange(open, close) =>
+    ((close - open) / open) * 100
+
+// Define pairs as an array
+pairs = array.from("EURUSD", "JPYUSD", "GBPUSD", "AUDUSD", "NZDUSD", "CADUSD", "CHFUSD")
+
+// Declare variables outside the loop to store calculated values
+var dailyChange
+var weeklyChange
+
+// Loop through each pair
+for pair in pairs
+    // Get the daily and weekly close and open prices for each pair
+    dailyClose = request.security(pair, "D", close)
+    weeklyClose = request.security(pair, "W", close)
+    
+    dailyOpen = request.security(pair, "D", open)
+    weeklyOpen = request.security(pair, "W", open)
+    
+    // Calculate the daily and weekly percent change
+    dailyChange = percentChange(dailyOpen, dailyClose)
+    weeklyChange = percentChange(weeklyOpen, weeklyClose)
+
+// Move plot calls outside the loop to the global scope
+plot(dailyChange, title=pair + " Daily Percent Change", color=color.new(color.green, math.rand(0, 50)), linewidth=2)
+plot(weeklyChange, title=pair + " Weekly Percent Change", color=color.new(color.blue, math.rand(0, 50)), linewidth=2)
+
+// Create and update labels outside the loop (optional)
+var dailyLabel = label.new(x=na, y=high, text="", style=label.style_label_down, color=color.green)
+var weeklyLabel = label.new(x=na, y=low, text="", style=label.style_label_up, color=color.blue)
+
+// Update label text and position inside the loop (optional)
+if (barstate.islast)
+    label.set_text(dailyLabel, pair + " Daily: " + str.tostring(dailyChange, "#.##") + "%")
+    label.set_text(weeklyLabel, pair + " Weekly: " + str.tostring(weeklyChange, "#.##") + "%")
+    label.set_xy(dailyLabel, bar_index, high)
+    label.set_xy(weeklyLabel, bar_index, low)
